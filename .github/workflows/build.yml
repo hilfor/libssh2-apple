@@ -5,53 +5,61 @@ on:
     tags:
     - 'v*'
 
+# The release step both creates the release and uploads to it; the default
+# GITHUB_TOKEN grant is read-only. Scoped to this repository and this run, and
+# it expires with the run.
+permissions:
+  contents: write
+
 jobs:
   build:
     name: Building release assets
-    runs-on: macOS-latest
+
+    # Pinned image: the driver builds every slice at deployment target 26.0, so
+    # the build needs an iOS 26 SDK, and macos-latest is free to roll back to an
+    # image that has none.
+    runs-on: macos-26
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
 
-    - name: xcode-select
-      run: sudo xcode-select -s /Applications/Xcode.app
+    # Assert the requirement rather than xcode-select a version path. Hardcoding
+    # /Applications/Xcode.app is what this step used to do, and the consuming
+    # app's Makefile records where that ends -- a hardcoded Xcode-26.5.0 default
+    # broke every target the day that app was removed. What the build actually
+    # needs is an iOS SDK >= 26.0; check for that, and say what is available
+    # when it is missing.
+    - name: Verify the toolchain has an iOS 26 SDK
+      run: |
+        set -euo pipefail
+        xcodebuild -version
+        sdk=$(xcrun --sdk iphoneos --show-sdk-version)
+        echo "active iOS SDK: ${sdk}"
+        if [ "$(printf '%s\n26.0\n' "$sdk" | sort -V | head -1)" != "26.0" ]; then
+          echo "✗ need an iOS SDK >= 26.0 for a deployment target of 26.0; installed Xcodes:"
+          ls -d /Applications/Xcode*.app
+          exit 1
+        fi
 
-    - name: install abimap
-      run: sudo pip3 install abimap
-
-    - name: build-libssh
+    # The `install abimap` step that used to sit here is gone: abimap is
+    # OpenSSL's symbol-versioning helper and nothing in this build calls it.
+    - name: build-libssh2
       run: swift run
 
-    - name: Create Release
-      id: create_release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    # Pinned by commit, not by the v2 tag: this action is granted contents:write
+    # on the repository that publishes a binary an App Store app embeds, and a
+    # tag can be moved. 3bb1273 is what v2 pointed at when this was recorded.
+    #
+    # release.md is written by Sources/libssh2-apple/main.swift and carries the
+    # libssh2 tag, the OpenSSL release the slices link against, the fork commit,
+    # the toolchain, and the SHA-256 of both assets below.
+    - name: Create release and upload assets
+      uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65
       with:
-        tag_name: ${{ github.ref }}
-        release_name: Release ${{ github.ref }}
         body_path: release.md
         draft: false
         prerelease: false
-
-    - name: Upload Release Asset Dynamic
-      id: upload-release-asset-dynamic
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }} 
-        asset_path: ./libssh2-dynamic.xcframework.zip
-        asset_name: libssh2-dynamic.xcframework.zip
-        asset_content_type: application/zip
-
-    - name: Upload Release Asset Static
-      id: upload-release-asset-static 
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }} 
-        asset_path: ./libssh2-static.xcframework.zip
-        asset_name: libssh2-static.xcframework.zip
-        asset_content_type: application/zip
+        fail_on_unmatched_files: true
+        files: |
+          libssh2-dynamic.xcframework.zip
+          libssh2-static.xcframework.zip
