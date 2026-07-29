@@ -34,12 +34,18 @@ enum Config {
 
   static let frameworkName = "libssh2"
 
-  // iOS device and simulator only. Platform.allCases also built watchOS, tvOS,
-  // macOS, Catalyst and visionOS. The consuming app loads none of them, and
-  // hilfor/openssl-apple publishes libcrypto for iOS, macOS and Catalyst only --
-  // so the watchOS, tvOS and visionOS slices had nothing of ours to link
-  // against in the first place.
-  static let platforms: [Platform] = [.iPhoneOS, .iPhoneSimulator]
+  // Platform.allCases also built watchOS, tvOS, Catalyst and visionOS slices.
+  // Nothing loads them, and hilfor/openssl-apple publishes libcrypto for iOS,
+  // macOS and Catalyst only -- so watchOS, tvOS and visionOS had nothing of ours
+  // to link against in the first place.
+  //
+  // macOS stays, and is not decoration: the consuming repo's
+  // Packages/SSHTransport declares .macOS(.v14) and takes this xcframework as a
+  // binaryTarget, so its integration tests -- the only ones that open a real SSH
+  // session -- build for macOS. Dropping the slice fails that package at
+  // resolution with "no library for this platform was found", which is not
+  // obviously about a missing slice.
+  static let platforms: [Platform] = [.iPhoneOS, .iPhoneSimulator, .MacOSX]
 }
 
 extension Platform {
@@ -129,10 +135,29 @@ struct ChecksumMismatch: Error, CustomStringConvertible {
 /// Downloads `url` and refuses to go on unless the bytes are the ones recorded
 /// in Config. The retry wraps the checksum too: a truncated transfer is a
 /// mismatch, and re-fetching is the right answer to it.
+///
+/// Not FMake's `download()`, which is a bare `curl -O -L`. Without `--fail` a
+/// 404 lands as an HTML body in a file named `.zip` and surfaces much later as
+/// an unzip error; without `--max-time` a stalled connection hangs the whole CI
+/// job rather than failing fast into a retry. The flags come from the consuming
+/// repo's Scripts/fetch-frameworks.sh, which took that incident.
 func downloadVerified(url: String, sha256 expected: String) throws {
   let file = (url as NSString).lastPathComponent
+
+  // These two archives are 95 MB together, and the consuming build script is
+  // re-run often. Same idempotence, and the same digest, as fetch-frameworks.sh.
+  if exists(file), let cached = try? sha(path: file), cached == expected {
+    print("✓ \(file) cached")
+    return
+  }
+
   try retrying(file) {
-    try download(url: url)
+    try sh(
+      "curl", "-fsSL",
+      "--retry 5", "--retry-delay 2", "--retry-all-errors",
+      "--connect-timeout 20", "--max-time 600",
+      "-o", file, url
+    )
     let actual = try sha(path: file)
     guard actual == expected else {
       throw ChecksumMismatch(file: file, expected: expected, actual: actual)
