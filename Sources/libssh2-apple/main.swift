@@ -56,11 +56,18 @@ extension Platform {
   /// hilfor/openssl-apple builds its libcrypto with. A lower floor here would
   /// be a promise the framework cannot keep: it loads openssl.framework, which
   /// refuses to load below 26.0.
+  ///
+  /// macOS sits at 14.0, which is what Packages/SSHTransport declares -- the
+  /// only consumer of that slice. The inherited 11.0 is below what the current
+  /// toolchain will build at all: Xcode 27 answers "the range of supported
+  /// deployment target versions is 12.0 to 27.0.x" and CMake's compiler probe
+  /// fails before libssh2 is configured.
   var deploymentTarget: String {
     switch self {
     case .AppleTVOS, .AppleTVSimulator: return "14.0"
     case .iPhoneOS, .iPhoneSimulator:   return "26.0"
-    case .MacOSX, .Catalyst:            return "11.0"
+    case .MacOSX:                       return "14.0"
+    case .Catalyst:                     return Platform.defaultCatalystVersion
     case .WatchOS, .WatchSimulator:     return "7.0"
     case .XROS, .XRSimulator:           return Platform.defaultVisionOSVersion
     }
