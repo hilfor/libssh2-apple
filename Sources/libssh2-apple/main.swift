@@ -22,15 +22,15 @@ enum Config {
   // the libs.zip supplies the headers and static libs CMake configures with.
   // Both come from the same release, and must: a header set from one OpenSSL
   // and a binary from another links cleanly and then misbehaves at runtime.
-  static let opensslLibsURL       = "https://github.com/hilfor/openssl-apple/releases/download/v3.5.7/openssl-libs.zip"
-  static let opensslFrameworksURL = "https://github.com/hilfor/openssl-apple/releases/download/v3.5.7/openssl-dynamic.frameworks.zip"
+  static let opensslLibsURL       = "https://github.com/hilfor/openssl-apple/releases/download/v3.5.7-2/openssl-libs.zip"
+  static let opensslFrameworksURL = "https://github.com/hilfor/openssl-apple/releases/download/v3.5.7-2/openssl-dynamic.frameworks.zip"
 
   // Copied from that release's own release.md. A GitHub release asset can be
   // deleted and re-uploaded under the same tag, and FMake's download() is a
   // bare `curl -O -L` -- no --fail, so a 404 lands as an HTML body in a file
   // named .zip. Both cases fail here instead of at `unzip`.
-  static let opensslLibsSHA256       = "7391f428fe4fb856f748d28f26b45d6afb0b0bb4124c35012a17d33f883e5d25"
-  static let opensslFrameworksSHA256 = "6fa63ad184f4f4276415f12a5a0e4e48e50bc636f5bc87f855152f6672ce5110"
+  static let opensslLibsSHA256       = "c403069573ba22d8d8185dbb6d38ad9e8bd6fbfa32031c8569894bcf67875425"
+  static let opensslFrameworksSHA256 = "699e505e4ab6f8d8fcbd3fc53ff0224bbbdc052f3b66308053c1e653fe2851ed"
 
   static let frameworkName = "libssh2"
 

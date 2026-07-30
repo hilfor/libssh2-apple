@@ -14,3 +14,7 @@ frameworks/
 xcframeworks/
 apple.cmake
 release.md
+# Written into this tree by the consuming repo's Scripts/build-libssh2.sh, which
+# uses a clone of this fork as its build directory. Untracked and unignored, it
+# was one `git add -A` away from landing here.
+build.log
