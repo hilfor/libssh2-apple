@@ -5,13 +5,13 @@ OutputLevel.default = .error
 
 enum Config {
   static let libssh2Origin = "https://github.com/libssh2/libssh2.git"
-  static let libssh2Tag = "libssh2-1.11.0"
-  static let libssh2Version = "1.11.0"
+  static let libssh2Tag = "libssh2-1.11.1"
+  static let libssh2Version = "1.11.1"
 
   // What that tag pointed at when this was recorded, asserted after the clone.
   // A tag is a movable reference on a repository nobody here controls, and this
   // is the source that becomes the shipped binary.
-  static let libssh2Commit = "1c3f1b7da588f2652260285529ec3c1f1125eb4e"
+  static let libssh2Commit = "a312b43325e3383c865a87bb1d26cb52e3292641"
 
   // Our own OpenSSL 3.5 build. The libcrypto this framework links is chosen by
   // these two URLs and by nothing else -- there is no build flag for it -- so
