@@ -22,8 +22,8 @@ enum Config {
   // the libs.zip supplies the headers and static libs CMake configures with.
   // Both come from the same release, and must: a header set from one OpenSSL
   // and a binary from another links cleanly and then misbehaves at runtime.
-  static let opensslLibsURL       = "https://github.com/hilfor/openssl-apple/releases/download/v3.5.7-2/openssl-libs.zip"
-  static let opensslFrameworksURL = "https://github.com/hilfor/openssl-apple/releases/download/v3.5.7-2/openssl-dynamic.frameworks.zip"
+  static let opensslLibsURL       = "https://github.com/hilfor/openssl-apple/releases/download/v3.5.7-3/openssl-libs.zip"
+  static let opensslFrameworksURL = "https://github.com/hilfor/openssl-apple/releases/download/v3.5.7-3/openssl-dynamic.frameworks.zip"
 
   // Copied from that release's own release.md. A GitHub release asset can be
   // deleted and re-uploaded under the same tag, and FMake's download() is a
@@ -51,11 +51,11 @@ enum Config {
 extension Platform {
   /// Minimum OS each slice declares, and the value CMake compiles against.
   ///
-  /// iOS sits at 26.0 because that is both the consuming app's
+  /// iOS sits at 17.0 because that is both the consuming app's
   /// IPHONEOS_DEPLOYMENT_TARGET and the IOS_MIN_SDK_VERSION
   /// hilfor/openssl-apple builds its libcrypto with. A lower floor here would
   /// be a promise the framework cannot keep: it loads openssl.framework, which
-  /// refuses to load below 26.0.
+  /// refuses to load below 17.0.
   ///
   /// macOS sits at 14.0, which is what Packages/SSHTransport declares -- the
   /// only consumer of that slice. The inherited 11.0 is below what the current
@@ -65,7 +65,7 @@ extension Platform {
   var deploymentTarget: String {
     switch self {
     case .AppleTVOS, .AppleTVSimulator: return "14.0"
-    case .iPhoneOS, .iPhoneSimulator:   return "26.0"
+    case .iPhoneOS, .iPhoneSimulator:   return "17.0"
     case .MacOSX:                       return "14.0"
     case .Catalyst:                     return Platform.defaultCatalystVersion
     case .WatchOS, .WatchSimulator:     return "7.0"
