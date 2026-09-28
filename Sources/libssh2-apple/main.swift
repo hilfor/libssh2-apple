@@ -29,8 +29,8 @@ enum Config {
   // deleted and re-uploaded under the same tag, and FMake's download() is a
   // bare `curl -O -L` -- no --fail, so a 404 lands as an HTML body in a file
   // named .zip. Both cases fail here instead of at `unzip`.
-  static let opensslLibsSHA256       = "c403069573ba22d8d8185dbb6d38ad9e8bd6fbfa32031c8569894bcf67875425"
-  static let opensslFrameworksSHA256 = "699e505e4ab6f8d8fcbd3fc53ff0224bbbdc052f3b66308053c1e653fe2851ed"
+  static let opensslLibsSHA256       = "bcd93f7389bd44f81448c453ccc057da5ad0e45508a943849771115a25158ae0"
+  static let opensslFrameworksSHA256 = "34ccfd15d1483039c1f4dcd9e80310a845a864b18aa389e555c4ea49a20a3c9e"
 
   static let frameworkName = "libssh2"
 
